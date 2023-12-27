@@ -1,29 +1,31 @@
 <script setup lang="ts">
-import Header from './Header.vue'
-import { Repl, ReplStore, SFCOptions } from '@vue/repl'
-import Monaco from '@vue/repl/monaco-editor'
-import { ref, watchEffect, onMounted } from 'vue'
+import Header from "./Header.vue";
+import { Repl, ReplStore, SFCOptions } from "@vue/repl";
+import Monaco from "@vue/repl/monaco-editor";
+import { ref, watchEffect, onMounted } from "vue";
+import welcomeEchartCode from "./template/welcome.vue?raw";
 
 const setVH = () => {
-  document.documentElement.style.setProperty('--vh', window.innerHeight + `px`)
-}
-window.addEventListener('resize', setVH)
-setVH()
+  document.documentElement.style.setProperty("--vh", window.innerHeight + `px`);
+};
+window.addEventListener("resize", setVH);
+setVH();
 
-const useDevMode = ref(false)
-const useSSRMode = ref(false)
+const useDevMode = ref(false);
+const useSSRMode = ref(false);
 
-let hash = location.hash.slice(1)
-if (hash.startsWith('__DEV__')) {
-  hash = hash.slice(7)
-  useDevMode.value = true
+let hash = location.hash.slice(1);
+if (hash.startsWith("__DEV__")) {
+  hash = hash.slice(7);
+  useDevMode.value = true;
 }
-if (hash.startsWith('__SSR__')) {
-  hash = hash.slice(7)
-  useSSRMode.value = true
+if (hash.startsWith("__SSR__")) {
+  hash = hash.slice(7);
+  useSSRMode.value = true;
 }
 
 const store = new ReplStore({
+  defaultWelcomeTpl: welcomeEchartCode,
   serializedState: hash,
   productionMode: !useDevMode.value,
   defaultVueRuntimeURL: import.meta.env.PROD
@@ -34,8 +36,18 @@ const store = new ReplStore({
     : `${location.origin}/src/vue-dev-proxy-prod`,
   defaultVueServerRendererURL: import.meta.env.PROD
     ? `${location.origin}/server-renderer.esm-browser.js`
-    : `${location.origin}/src/vue-server-renderer-dev-proxy`
-})
+    : `${location.origin}/src/vue-server-renderer-dev-proxy`,
+});
+
+// 默认的echarts
+store.setImportMap({
+  imports: {
+    echarts: "https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.esm.js",
+    vue: "https://play.vuejs.org/vue.runtime.esm-browser.prod.js",
+    "vue/server-renderer":
+      "https://play.vuejs.org/server-renderer.esm-browser.js",
+  },
+});
 
 // enable experimental features
 const sfcOptions: SFCOptions = {
@@ -43,48 +55,48 @@ const sfcOptions: SFCOptions = {
     inlineTemplate: !useDevMode.value,
     isProd: !useDevMode.value,
     reactivityTransform: true,
-    defineModel: true
+    defineModel: true,
   },
   style: {
-    isProd: !useDevMode.value
+    isProd: !useDevMode.value,
   },
   template: {
-    isProd: !useDevMode.value
-  }
-}
+    isProd: !useDevMode.value,
+  },
+};
 
 // persist state
 watchEffect(() => {
   const newHash = store
     .serialize()
     .replace(/^#/, useSSRMode.value ? `#__SSR__` : `#`)
-    .replace(/^#/, useDevMode.value ? `#__DEV__` : `#`)
-  history.replaceState({}, '', newHash)
-})
+    .replace(/^#/, useDevMode.value ? `#__DEV__` : `#`);
+  history.replaceState({}, "", newHash);
+});
 
 function toggleDevMode() {
-  const dev = (useDevMode.value = !useDevMode.value)
+  const dev = (useDevMode.value = !useDevMode.value);
   sfcOptions.script!.inlineTemplate =
     sfcOptions.script!.isProd =
     sfcOptions.template!.isProd =
     sfcOptions.style!.isProd =
-      !dev
-  store.toggleProduction()
+      !dev;
+  store.toggleProduction();
 }
 
 function toggleSSR() {
-  useSSRMode.value = !useSSRMode.value
-  store.setFiles(store.getFiles())
+  useSSRMode.value = !useSSRMode.value;
+  store.setFiles(store.getFiles());
 }
 
-const theme = ref<'dark' | 'light'>('dark')
+const theme = ref<"dark" | "light">("dark");
 function toggleTheme(isDark: boolean) {
-  theme.value = isDark ? 'dark' : 'light'
+  theme.value = isDark ? "dark" : "light";
 }
 onMounted(() => {
-  const cls = document.documentElement.classList
-  toggleTheme(cls.contains('dark'))
-})
+  const cls = document.documentElement.classList;
+  toggleTheme(cls.contains("dark"));
+});
 </script>
 
 <template>
@@ -117,8 +129,8 @@ onMounted(() => {
 
 body {
   font-size: 13px;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen,
-    Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
+    Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
   margin: 0;
   --base: #444;
   --nav-height: 50px;
